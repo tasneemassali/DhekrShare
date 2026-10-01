@@ -85,7 +85,7 @@ npm run check
 npm test
 ```
 
-Unit tests cover policy helpers, not deployed Firebase integration. CI builds Swift on a macOS runner; a green build does not prove delivery on physical phones. Run the two-iPhone acceptance checklist in SETUP before relying on notifications.
+The 14 tests cover policy helpers and actual callable handlers using an atomic in-memory Firestore double: authentication checks, setup-key protection, expiry, self/third-device rejection, simultaneous joins/sends, exact notification payloads, token refresh, and invalid-token cleanup. They do not exercise deployed Firebase middleware or real APNs delivery. CI builds Swift on a macOS runner; a green build does not prove delivery on physical phones. Run the two-iPhone acceptance checklist in SETUP before relying on notifications.
 
 ## Apple account requirements
 
@@ -97,3 +97,5 @@ Official references:
 - [Firebase Apple push setup](https://firebase.google.com/docs/cloud-messaging/ios/get-started)
 - [App Attest setup](https://firebase.google.com/docs/app-check/ios/app-attest-provider)
 - [Firebase Functions deployment and billing](https://firebase.google.com/docs/functions/get-started)
+
+Invalid or unregistered notification tokens are cleared server-side after FCM rejects them. A transactional comparison preserves any newer token registered while the failed push was in flight. Reopening the receiving phone registers its current token again.
