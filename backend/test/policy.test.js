@@ -11,6 +11,8 @@ test('only members can address their one partner', () => {
   assert.equal(partner({members: ['a', 'b']}, 'b'), 'a');
   assert.equal(partner({members: ['a', 'b']}, 'c'), null);
   assert.equal(partner({members: ['a']}, 'a'), null);
+  assert.equal(partner({members: ['a', 'b', 'c']}, 'a'), null);
+  assert.equal(partner({members: ['a', 'a']}, 'a'), null);
 });
 test('reject expired, consumed, malformed and incorrect pairing codes', () => {
   const p = {members: ['a'], codeHash: hash('123456'), expiresAt: 200};
@@ -20,6 +22,7 @@ test('reject expired, consumed, malformed and incorrect pairing codes', () => {
   assert.ok(!availableCode(p, '999999', 100));
   assert.ok(!validCode(123456));
   assert.ok(!validCode('1234567'));
+  assert.ok(!availableCode({}, '123456', 100));
 });
 test('private installation key requires exact match and minimum length', () => {
   assert.ok(sameSecret('abcdefghijklmnop', 'abcdefghijklmnop'));

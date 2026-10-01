@@ -79,7 +79,7 @@ exports.sendDhikr = onCall(options, async request => {
   const uid = uidOf(request);
   const id = request.data?.dhikrID;
   if (!Number.isInteger(id) || !DHIKR[id]) fail('invalid-argument', 'Unknown dhikr.');
-  const token = await db.runTransaction(async tx => {
+  const target = await db.runTransaction(async tx => {
     const pair = (await tx.get(pairRef)).data();
     const other = partner(pair, uid);
     if (!other) fail('failed-precondition', 'Pair both devices first.');
@@ -88,13 +88,20 @@ exports.sendDhikr = onCall(options, async request => {
     if (!device.data()?.token) fail('failed-precondition', 'Other device must enable notifications and open the app.');
     if (Date.now() - (rate.data()?.at || 0) < 2000) fail('resource-exhausted', 'Please wait.');
     tx.set(rateRef, {at: Date.now()});
-    return device.data().token;
+    return {uid: other, token: device.data().token};
   });
   try {
-    await getMessaging().send({token, notification: {title: 'تذكير ❤️', body: DHIKR[id]},
+    await getMessaging().send({token: target.token, notification: {title: 'تذكير ❤️', body: DHIKR[id]},
       apns: {headers: {'apns-push-type': 'alert', 'apns-priority': '10',
         'apns-expiration': String(Math.floor(Date.now() / 1000) + 3600)}, payload: {aps: {sound: 'default'}}}});
-  } catch (_) {
+  } catch (error) {
+    if (['messaging/registration-token-not-registered', 'messaging/invalid-registration-token'].includes(error.code)) {
+      // An in-flight failure must not erase a newer token registered by the receiver.
+      const ref = db.doc(`devices/${target.uid}`);
+      await db.runTransaction(async tx => {
+        if ((await tx.get(ref)).data()?.token === target.token) tx.set(ref, {});
+      });
+    }
     // Do not log private tokens; do not retry an ambiguous send automatically.
     fail('unavailable', 'Notification could not be accepted. Open the app on both devices and try again.');
   }

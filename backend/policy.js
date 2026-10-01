@@ -9,12 +9,12 @@ function sameSecret(a, b) {
     timingSafeEqual(Buffer.from(hash(a)), Buffer.from(hash(b)));
 }
 function partner(pair, uid) {
-  if (!pair || !Array.isArray(pair.members) || !pair.members.includes(uid)) return null;
+  if (!pair || !Array.isArray(pair.members) || pair.members.length !== 2 || !pair.members.includes(uid)) return null;
   return pair.members.find(id => id !== uid) || null;
 }
 function validCode(code) { return typeof code === 'string' && /^\d{6}$/.test(code); }
 function availableCode(pair, code, now) {
-  return pair && pair.members.length === 1 && pair.expiresAt > now &&
+  return pair && Array.isArray(pair.members) && pair.members.length === 1 && pair.expiresAt > now &&
     validCode(code) && pair.codeHash === hash(code);
 }
 module.exports = {DHIKR, hash, sameSecret, partner, validCode, availableCode};
