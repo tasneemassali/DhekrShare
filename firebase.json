@@ -1,0 +1,1 @@
+{"functions":[{"source":"backend","codebase":"default","runtime":"nodejs22","ignore":["node_modules",".git","test","*.log"]}],"firestore":{"rules":"firestore.rules"}}

@@ -1,0 +1,4 @@
+// Choose your own unique bundle identifier when configuring Apple and Firebase.
+PRODUCT_BUNDLE_IDENTIFIER = com.tasneemassali.DhekrShare
+DEVELOPMENT_TEAM =
+#include? "Local.xcconfig"
